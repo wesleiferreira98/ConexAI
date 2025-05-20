@@ -1,0 +1,3 @@
+from APP.test.test_carregamento_modelos import test_carregamento_modelo_transformers
+
+test_carregamento_modelo_transformers("ConexAI V2")

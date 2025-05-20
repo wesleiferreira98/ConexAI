@@ -1,0 +1,20 @@
+# Requisitos para executar a API ConexAI
+
+fastapi==0.110.0
+uvicorn[standard]==0.29.0
+transformers==4.39.3
+peft==0.10.0
+sentence-transformers==2.2.2
+scikit-learn==1.4.1.post1
+numpy==1.26.4
+torch==2.2.2
+accelerate==0.28.0
+optimum==1.17.1
+bitsandbytes==0.43.1
+
+# Utilitários adicionais
+python-dotenv==1.0.1
+
+# Para exportação de gráficos estruturados (se aplicável)
+regex==2024.4.16
+ctransformers

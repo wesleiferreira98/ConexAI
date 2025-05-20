@@ -1,0 +1,7 @@
+from APP.test.test_gerador_grafico import testar_gerador_grafico
+from APP.test.test_gerador_relatorio import testar_geracao_relatorios
+from APP.test.test_carregamento_modelos import test_carregamento_modelo_transformers
+
+testar_gerador_grafico()
+testar_geracao_relatorios()
+test_carregamento_modelo_transformers("ConexAI V2")

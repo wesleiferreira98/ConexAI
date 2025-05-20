@@ -1,0 +1,188 @@
+[
+    {
+        "pergunta": "Como calcular o lucro líquido de uma empresa?",
+        "complexidade": "baixa"
+    },
+    {
+        "pergunta": "Qual a fórmula do índice de endividamento?",
+        "complexidade": "baixa"
+    },
+    {
+        "pergunta": "Como medir a taxa de retenção de clientes?",
+        "complexidade": "baixa"
+    },
+    {
+        "pergunta": "Qual é o cálculo do ponto de equilíbrio financeiro?",
+        "complexidade": "baixa"
+    },
+    {
+        "pergunta": "Como determinar o custo unitário de produção?",
+        "complexidade": "baixa"
+    },
+    {
+        "pergunta": "Como calcular a margem de contribuição por produto?",
+        "complexidade": "baixa"
+    },
+    {
+        "pergunta": "Qual a fórmula do retorno sobre investimento (ROI)?",
+        "complexidade": "baixa"
+    },
+    {
+        "pergunta": "Como determinar o preço de venda usando markup?",
+        "complexidade": "baixa"
+    },
+    {
+        "pergunta": "Qual o cálculo do giro de estoque ideal?",
+        "complexidade": "baixa"
+    },
+    {
+        "pergunta": "Como medir a produtividade por funcionário?",
+        "complexidade": "baixa"
+    },
+
+    {
+        "pergunta": "Como calcular o custo médio ponderado de capital (WACC)?",
+        "complexidade": "baixa"
+    },
+    {
+        "pergunta": "Qual a fórmula do índice de liquidez corrente?",
+        "complexidade": "baixa"
+    },
+    {
+        "pergunta": "Como determinar o preço de venda com base no custo variável?",
+        "complexidade": "baixa"
+    },
+    {
+        "pergunta": "Qual o cálculo da taxa de rotatividade de funcionários?",
+        "complexidade": "baixa"
+    },
+    {
+        "pergunta": "Como medir a eficiência de máquinas em uma linha de produção?",
+        "complexidade": "baixa"
+    },
+
+    
+    {
+        "pergunta": "Quais KPIs usar para avaliar a eficiência de campanhas de marketing digital?",
+        "complexidade": "media"
+    },
+    {
+        "pergunta": "Como comparar a rentabilidade de produtos em diferentes regiões?",
+        "complexidade": "media"
+    },
+    {
+        "pergunta": "Quais critérios adotar para escolher entre terceirização ou produção interna?",
+        "complexidade": "media"
+    },
+    {
+        "pergunta": "Como otimizar o mix de produtos considerando sazonalidade e margem de contribuição?",
+        "complexidade": "media"
+    },
+    {
+        "pergunta": "Quais métricas priorizar na análise de desempenho de equipes de vendas?",
+        "complexidade": "media"
+    },
+    {
+        "pergunta": "Como balancear custo-benefício na implementação de ERP?",
+        "complexidade": "media"
+    },
+    {
+        "pergunta": "Quais fatores considerar na análise de viabilidade de novos mercados?",
+        "complexidade": "media"
+    },
+    {
+        "pergunta": "Como criar um sistema de incentivos alinhado à performance da equipe?",
+        "complexidade": "media"
+    },
+    {
+        "pergunta": "Quais métodos usar para precificação dinâmica em e-commerce?",
+        "complexidade": "media"
+    },
+    {
+        "pergunta": "Como avaliar o impacto financeiro de recall de produtos?",
+        "complexidade": "media"
+    },
+    {
+        "pergunta": "Como alocar recursos entre projetos concorrentes com restrições orçamentárias?",
+        "complexidade": "media"
+    },
+    {
+        "pergunta": "Quais indicadores usar para avaliar a sustentabilidade financeira de startups?",
+        "complexidade": "media"
+    },
+    {
+        "pergunta": "Como implementar um sistema de custeio baseado em atividades (ABC)?",
+        "complexidade": "media"
+    },
+    {
+        "pergunta": "Quais métodos aplicar para redução de custos sem comprometer a qualidade?",
+        "complexidade": "media"
+    },
+    {
+        "pergunta": "Como analisar a viabilidade de expansão para canais de vendas online?",
+        "complexidade": "media"
+    },
+    
+    {
+        "pergunta": "Como prever a demanda de mercado usando machine learning e dados socioeconômicos?",
+        "complexidade": "alta"
+    },
+    {
+        "pergunta": "Qual estratégia de hedging adotar para operações internacionais em cenários de volatilidade cambial?",
+        "complexidade": "alta"
+    },
+    {
+        "pergunta": "Como modelar riscos ESG (Ambientais, Sociais e de Governança) em investimentos de longo prazo?",
+        "complexidade": "alta"
+    },
+    {
+        "pergunta": "Como integrar blockchain na gestão de cadeias de suprimentos globais para rastreabilidade?",
+        "complexidade": "alta"
+    },
+    {
+        "pergunta": "Qual framework usar para simular impactos de fusões e aquisições em diferentes cenários macroeconômicos?",
+        "complexidade": "alta"
+    },
+    {
+        "pergunta": "Como aplicar análise preditiva para otimização de cadeias logísticas internacionais?",
+        "complexidade": "alta"
+    },
+    {
+        "pergunta": "Qual modelo de IA usar para detecção de fraudes em transações financeiras em tempo real?",
+        "complexidade": "alta"
+    },
+    {
+        "pergunta": "Como integrar critérios de economia circular na avaliação de projetos de investimento?",
+        "complexidade": "alta"
+    },
+    {
+        "pergunta": "Qual framework de risco usar para operações em países com instabilidade política?",
+        "complexidade": "alta"
+    },
+    {
+        "pergunta": "Como modelar cenários de stress test para instituições financeiras considerando crises sistêmicas?",
+        "complexidade": "alta"
+    },
+
+    {
+        "pergunta": "Como desenvolver modelos de Monte Carlo para avaliação de riscos em investimentos imobiliários?",
+        "complexidade": "alta"
+    },
+    {
+        "pergunta": "Qual arquitetura de deep learning utilizar para previsão de séries temporais em mercados commodities?",
+        "complexidade": "alta"
+    },
+    {
+        "pergunta": "Como integrar análise de cenários climáticos extremos na gestão de riscos de cadeias de suprimentos?",
+        "complexidade": "alta"
+    },
+    {
+        "pergunta": "Qual estratégia de tokenização de ativos implementar para fintechs em ambientes regulatórios complexos?",
+        "complexidade": "alta"
+    },
+    {
+        "pergunta": "Como modelar a interação entre políticas fiscais governamentais e valuation de empresas multinacionais?",
+        "complexidade": "alta"
+    }
+
+]
