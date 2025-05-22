@@ -1,5 +1,6 @@
 from APP.services.chat.formatador_prompt import formatar_prompt
-
+import torch
+from transformers import GenerationConfig 
 class GeradorRespostaLLM:
     def __init__(self, model, tokenizer=None, framework="llama_cpp"):
         self.model = model
