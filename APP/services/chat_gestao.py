@@ -1,129 +1,114 @@
-from APP.db.contexto_db import ContextStorage
-from APP.helpers.contexto_visual import ExportadorRespostaVisual
-from APP.services.chat.interface_terminal import InterfaceTerminal
+# APP/services/chat_gestao.py (Refatorado para API)
+import logging
+from typing import Dict, Any, Optional, Tuple
+
+from APP.db.contexto_db import ContextStorage # Ainda precisará para interações DB
 from APP.services.chat.gerador_resposta_llm import GeradorRespostaLLM
-from APP.services.chat.formatador_prompt import formatar_prompt
-from APP.helpers.historico_interacao import HistoricoInteracao
+from APP.services.validador import ValidadorPergunta
 from APP.helpers.gerador_grafico import GeradorEstruturaGrafico
 
+# Importações para explicabilidade (necessário para type hinting e uso)
+from APP.helpers.explicabilidade.utils import MockLLMForExplanation, formatar_explicacao
+from APP.helpers.explicabilidade.shap_explicator import ShapExplicator
+import lime.lime_text # Para LimeTextExplainer
 
-# Importações para explicabilidade
-from APP.helpers.explicabilidade.utils import formatar_explicacao # preparar_dados_para_explicacao não é mais tão crítica aqui
-from APP.helpers.explicabilidade.shap_explicator import ShapExplicator # Para type hinting
-import lime.lime_text # Para type hinting e garantir que estamos usando o certo
 class ChatGestao:
-    def __init__(self, validador, gerador: GeradorRespostaLLM, context_db: ContextStorage, 
-                 versao="ConexAI Vteste", mock_llm_for_explanation=None, # Novo parâmetro
-                 lime_explicator: lime.lime_text.LimeTextExplainer = None, 
-                 shap_explicator: ShapExplicator = None):
+    def __init__(self, validador: ValidadorPergunta, gerador: GeradorRespostaLLM, 
+                 context_db: ContextStorage, # Passamos o DB para cá, se a ChatGestao ainda for "service layer"
+                 versao: str, 
+                 mock_llm_for_explanation: MockLLMForExplanation, 
+                 lime_explicator: lime.lime_text.LimeTextExplainer, 
+                 shap_explicator: ShapExplicator,
+                 gerador_grafico: GeradorEstruturaGrafico): # Gerador de gráfico também é stateless
         
         self.validador = validador
         self.gerador = gerador
-        self.context_db = context_db
+        self.context_db = context_db # Para criar/gerenciar chats no DB
         self.versao = versao
-
-        self.chat_id = None
-        self.usuario = None
-        self.novo_chat_temp = False
-        self.interface = InterfaceTerminal()
-        self.historico = HistoricoInteracao(self.context_db)
-        self.gerador_grafico = GeradorEstruturaGrafico()
-        
-        self.mock_llm_for_explanation = mock_llm_for_explanation # Guarda a instância do mock
+        self.mock_llm_for_explanation = mock_llm_for_explanation
         self.lime_explicator = lime_explicator
         self.shap_explicator = shap_explicator
+        self.gerador_grafico = gerador_grafico
+        logging.basicConfig(level=logging.INFO) # Configura logging
 
-    def iniciar_chat(self):
-        self.interface.exibir_boas_vindas()
-        self.usuario = self.interface.solicitar_usuario()
-        self._selecionar_ou_criar_chat()
+    async def processar_pergunta_api(self, usuario: str, pergunta: str, chat_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Processa uma pergunta de um usuário no contexto de uma API.
+        Gerencia a criação/recuperação do chat_id, validação, geração de resposta e explicabilidade.
+        
+        Retorna um dicionário com todos os dados da interação.
+        """
+        current_chat_id = chat_id
 
-        while True:
-            pergunta = self.interface.solicitar_pergunta()
-            if pergunta.lower() in ['sair', 'exit']:
-                break
-            self.processar_pergunta(pergunta)
-
-    def _selecionar_ou_criar_chat(self):
-        chats = self.context_db.listar_chats(self.usuario)
-        self.novo_chat_temp = False
-
-        escolha = self.interface.exibir_chats_anteriores(chats)
-
-        if escolha == "0":
-            self.novo_chat_temp = True
-            self.interface.exibir_mensagem("🔧 O nome do novo chat será definido com base na primeira pergunta enviada.")
+        # --- Gerenciamento do ID do Chat ---
+        # Se não houver chat_id, cria um novo.
+        if current_chat_id is None:
+            new_chat_name = pergunta.strip()[:40].capitalize() # Nome baseado na primeira pergunta
+            current_chat_id = self.context_db.criar_chat(usuario, new_chat_name)
+            logging.info(f"API: Novo chat criado para '{usuario}': {current_chat_id}")
         else:
-            idx = int(escolha) - 1
-            self.chat_id = chats[idx][0]
-            self.historico.configurar_chat_id(self.chat_id)
+            # Opcional: Validar se o chat_id existe para este usuário no DB.
+            # Para esta demonstração, assumimos que o chat_id é válido se fornecido.
+            logging.info(f"API: Usando chat existente '{current_chat_id}' para '{usuario}'")
 
-    def processar_pergunta(self, pergunta: str):
-        valido, detalhes = self.validador.validar_pergunta(pergunta)
-        resposta = "" 
+        # --- Validação da Pergunta ---
+        valido, detalhes_validacao = self.validador.validar_pergunta(pergunta)
+        
+        resposta_llm = ""
+        explicacao_lime = None
+        explicacao_shap = None
+        dados_grafico = None
 
         if valido:
-            self.interface.exibir_mensagem("\nProcessando sua consulta...")
-            resposta = self.gerador.gerar_resposta(pergunta)
-            self.historico.registrar(pergunta, resposta, valido, detalhes)
-            self._responder_pergunta_valida(pergunta, resposta)
-
-            # --- Adição da explicabilidade ---
-            # Verifica se os explicadores e o mock LLM estão disponíveis
+            logging.info(f"API: Pergunta válida. Gerando resposta para '{usuario}'...")
+            resposta_llm = self.gerador.gerar_resposta(pergunta)
+            
+            # --- Explicabilidade (LIME e SHAP) ---
             if self.lime_explicator and self.mock_llm_for_explanation:
                 try:
-                    self.interface.exibir_mensagem("\n--- Gerando Explicação LIME (Texto) ---")
-                    # explain_instance espera: text_instance (a pergunta original), 
-                    # classifier_fn (a função predict_proba do mock), e num_features.
-                    lime_explanation = self.lime_explicator.explain_instance(
+                    logging.info("API: Gerando explicação LIME...")
+                    # lime.lime_text.LimeTextExplainer.explain_instance
+                    lime_explanation_obj = self.lime_explicator.explain_instance(
                         text_instance=pergunta,
                         classifier_fn=self.mock_llm_for_explanation.predict_proba,
-                        labels=[1], # Qual classe queremos explicar? 1 = "Sobre_Gestao"
-                        num_features=5 # Quantas palavras mais importantes
+                        labels=[1], # Assumindo que a classe 1 é "Sobre_Gestao" (do TopicoClassificador)
+                        num_features=5 # Palavras mais importantes
                     )
-                    # exibe as palavras mais importantes para a classe "Sobre_Gestao"
-                    self.interface.exibir_mensagem(
-                        f"\nPalavras mais importantes da sua pergunta para a IA gerar resposta sobre 'Gestão':\n"
-                        f"{formatar_explicacao(lime_explanation.as_list(label=1))}"
-                    )
+                    explicacao_lime = formatar_explicacao(lime_explanation_obj.as_list(label=1))
                 except Exception as e:
-                    self.interface.exibir_erro(f"Erro ao gerar explicação LIME: {e}")
+                    logging.warning(f"API - Erro ao gerar explicação LIME: {e}")
+                    explicacao_lime = f"Erro ao gerar LIME: {e}"
 
             if self.shap_explicator:
                 try:
-                    self.interface.exibir_mensagem("\n--- Gerando Explicação SHAP (Texto) ---")
-                    # O ShapExplicator já está configurado para receber o texto
-                    shap_explanation = self.shap_explicator.explicar(pergunta)
-                    self.interface.exibir_mensagem(
-                        f"\nContribuição das palavras da sua pergunta (SHAP):\n"
-                        f"{formatar_explicacao(shap_explanation)}"
-                    )
+                    logging.info("API: Gerando explicação SHAP...")
+                    shap_explanation_obj = self.shap_explicator.explicar(pergunta)
+                    explicacao_shap = formatar_explicacao(shap_explanation_obj)
                 except Exception as e:
-                    self.interface.exibir_erro(f"Erro ao gerar explicação SHAP: {e}")
-            # --- Fim da adição da explicabilidade ---
+                    logging.warning(f"API - Erro ao gerar explicação SHAP: {e}")
+                    explicacao_shap = f"Erro ao gerar SHAP: {e}"
 
-            dados_grafico = self.gerador_grafico.extrair_dados_de_resposta(resposta)
-
+            # --- Extração de Dados para Gráfico ---
+            dados_grafico = self.gerador_grafico.extrair_dados_de_resposta(resposta_llm)
             if dados_grafico:
-                self.interface.exibir_mensagem("\n🔍 Dados estruturados detectados, gerando gráfico...")
-                exportador = ExportadorRespostaVisual()
-                exportador.exportar(dados_grafico)
-
+                logging.info("API: Dados estruturados para gráfico detectados.")
         else:
-            self.historico.registrar(pergunta, "", valido, detalhes)
-            self._responder_pergunta_invalida(detalhes)
-        
-        return resposta
+            logging.info(f"API: Pergunta inválida para '{usuario}'. Detalhes: {detalhes_validacao}")
+            resposta_llm = detalhes_validacao.get('detalhes', "Não foi possível processar a pergunta devido a termos técnicos ou estar fora do escopo.")
+            
+        # --- Retornar Resultados ---
+        return {
+            "chat_id": current_chat_id,
+            "usuario": usuario,
+            "pergunta": pergunta,
+            "resposta_llm_bruta": resposta_llm, # Retorna a resposta crua do LLM
+            "valido": valido,
+            "detalhes_validacao": detalhes_validacao,
+            "explicacao_lime": explicacao_lime,
+            "explicacao_shap": explicacao_shap,
+            "dados_grafico": dados_grafico, # Retorna os dados estruturados para o cliente
+            "modelo_versao": self.versao
+        }
 
-    def _responder_pergunta_valida(self, pergunta: str, resposta: str):
-        self.interface.exibir_resposta(resposta, self.versao)
-
-        if self.novo_chat_temp:
-            nome_chat = pergunta.strip()[:40].capitalize()
-            self.chat_id = self.context_db.criar_chat(self.usuario, nome_chat)
-            self.historico.configurar_chat_id(self.chat_id)
-            self.novo_chat_temp = False
-        
-
-    def _responder_pergunta_invalida(self, detalhes: dict):
-        self.interface.exibir_erro_validacao(detalhes)
+# Remova os métodos iniciar_chat, _selecionar_ou_criar_chat, _responder_pergunta_valida, _responder_pergunta_invalida
+# Eles são específicos da CLI e não se aplicam a um contexto de API.
