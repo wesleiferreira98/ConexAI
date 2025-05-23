@@ -9,13 +9,13 @@ class ConexAIConfig:
     MODELOS = {
         "ConexAI V1": {
             "base_model": "deepseek-ai/deepseek-llm-7b-chat",
-            "adapter_repo": "wesleiferreira98/ConexAI_V1",
+            "adapter_repo": "ConexAITeam/ConexAI_V1",
             "torch_dtype": "bfloat16",
             "llama_cpp": False
         },
         "ConexAI V2": {
             "base_model": "mistralai/Mistral-7B-Instruct-v0.2",
-            "adapter_repo": "wesleiferreira98/ConexAI_V2",
+            "adapter_repo": "ConexAITeam/ConexAI_V2",
             "torch_dtype": "float16",
             "llama_cpp": False
         },
