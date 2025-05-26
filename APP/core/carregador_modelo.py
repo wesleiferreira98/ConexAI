@@ -18,12 +18,12 @@ def usar_bitsandbytes():
 def carregar_modelo(versao="ConexAI V1"):
     if versao == "ConexAI V2":
         base_model = "mistralai/Mistral-7B-Instruct-v0.2"
-        adapter_repo = "wesleiferreira98/ConexAI_V2"
+        adapter_repo = "ConexAITeam/ConexAI_V2"
         torch_dtype = torch.float16
 
     elif versao == "ConexAI V1":
         base_model = "deepseek-ai/deepseek-llm-7b-chat"
-        adapter_repo = "wesleiferreira98/ConexAI_V1"
+        adapter_repo = "ConexAITeam/ConexAI_V1"
         torch_dtype = torch.bfloat16
 
     elif versao == "ConexAI Vteste":
