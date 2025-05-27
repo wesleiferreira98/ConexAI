@@ -1,5 +1,4 @@
-# APP/db/contexto_db.py
-#import aiosqlite # type: ignore # Importa a biblioteca assíncrona para SQLite
+#import aiosqlite # type: ignore
 from datetime import datetime
 import json
 import logging

@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from APP.API.routes import router
 from APP.core.config import CONFIG
 from APP.core.constantes import VERSAO_MODELO, ADAPTER_PATH, BASE_MODEL
-from APP.services.chat_factory import get_shared_resources
+from APP.services.chat_factory import close_db_connection, get_shared_resources
 import uvicorn # Configura o logging básico para a aplicação
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -54,10 +54,10 @@ async def shutdown_event():
     Este evento é executado quando a aplicação está sendo desligada.
     Útil para fechar conexões de banco de dados, limpar recursos, etc.
     """
+    # CORREÇÃO: Chamando a função de fechamento do DB que foi definida em chat_factory.py
+    await close_db_connection() 
     logging.info("🔴 Desligando a aplicação FastAPI...")
-    # Adicione aqui qualquer lógica de limpeza, como fechar conexões de banco de dados, se necessário.
-    # Ex: if hasattr(app, "db_connection_pool"): app.db_connection_pool.close()
-
+   
 
 if __name__ == "__main__":
     logging.info("Iniciando o servidor Uvicorn a partir de main.py...")
