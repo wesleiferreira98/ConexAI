@@ -1,10 +1,14 @@
-# APP/core/config.py
 from transformers import GenerationConfig
 import os
-import torch # Importar torch para usar getattr para dtypes
+import torch
 
 class ConexAIConfig:
-    VERSAO_MODELO = os.environ.get("CONEXAI_MODELO", "ConexAI Vteste")
+    #VERSAO_MODELO = os.environ.get("CONEXAI_MODELO", "ConexAI Vteste")
+    VERSAO_MODELO = "ConexAI Vteste"
+    
+    # NOVO FLAG DE CONFIGURAÇÃO PARA EXPLICABILIDADE
+    # Pode ser definido via variável de ambiente CONEXAI_ENABLE_XAI (default: "true")
+    ENABLE_XAI = os.environ.get("CONEXAI_ENABLE_XAI", "true").lower() == "true"
     
     MODELOS = {
         "ConexAI V1": {
