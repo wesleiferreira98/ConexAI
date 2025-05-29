@@ -25,7 +25,12 @@ def carregar_modelo(versao="ConexAI V1"):
         base_model = "deepseek-ai/deepseek-llm-7b-chat"
         adapter_repo = "ConexAITeam/ConexAI_V1"
         torch_dtype = torch.bfloat16
-
+    
+    elif versao == "ConexAI V3":
+        base_model = "meta-llama/Llama-3.1-8B-Instruct"
+        adapter_repo = "ConexAITeam/ConexAI_V3"
+        torch_dtype = torch.bfloat16
+        
     elif versao == "ConexAI Vteste":
         return carregar_llama_modelo(versao)
 

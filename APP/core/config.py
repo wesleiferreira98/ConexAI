@@ -23,6 +23,12 @@ class ConexAIConfig:
             "torch_dtype": "float16",
             "llama_cpp": False
         },
+        "ConexAI V3": {
+            "base_model": "meta-llama/Llama-3.1-8B-Instruct",
+            "adapter_repo": "ConexAITeam/ConexAI_V3",
+            "torch_dtype": "float16",
+            "llama_cpp": False
+        },
         "ConexAI Vteste": {
             "base_model": None,
             "adapter_repo": None,
