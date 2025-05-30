@@ -1,5 +1,3 @@
-
-
 # ConexAI API – Documentação Técnica
 
 > API em FastAPI que expõe os recursos do modelo  **ConexAI VX** , permitindo integração com aplicações externas (como backend em Node.js), gerenciamento de contexto e acesso ao histórico de conversas.
