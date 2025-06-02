@@ -1,4 +1,3 @@
-# APP/services/chat_gestao.py (Refatorado para API)
 import logging
 from typing import Dict, Any, Optional, Tuple
 
