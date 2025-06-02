@@ -85,7 +85,7 @@ O ConexAI possui suporte a múltiplas versões:
 * `ConexAI V2`: Baseado em `mistralai/Mistral-7B-Instruct-v0.2`
 * `ConexAI V3`: Baseado em `meta-llama/Llama-3.1-8B-Instruct`
 
-A seleção é feita dinamicamente no `<span>criar_chat(versao: str)</span>`.
+A seleção é feita dinamicamente no `criar_chat(versao: str)`.
 
 ---
 
@@ -94,7 +94,7 @@ A seleção é feita dinamicamente no `<span>criar_chat(versao: str)</span>`.
 * **Frameworks:** FastAPI, Transformers, PEFT (LoRA), SQLite
 * **Quantização:** 4-bit (NF4 via BitsAndBytes)
 * **Modelo carregado dinamicamente**
-* **Tokenização:** baseada em `<span>AutoTokenizer</span>`
+* **Tokenização:** baseada em `AutoTokenizer`
 
 ---
 
