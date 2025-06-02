@@ -1,15 +1,21 @@
 # APP/API/routes.py
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import FileResponse
+from matplotlib.dates import relativedelta
 from pydantic import BaseModel, Field # Importe Field para default values
 from datetime import datetime
 from typing import Optional, Dict, Any, List, Tuple
 
 # Importa a função que fornece a instância de ChatGestao por requisição
-from APP.services.chat_factory import get_chat_gestion_for_request 
+from APP.services.cac_exporter import CacExporter
+from APP.services.chat_factory import get_chat_gestion_for_request, get_shared_resources 
 from APP.services.chat_gestao import ChatGestao # Para type hinting
 from APP.helpers.explicabilidade.utils import formatar_explicacao # Para formatar explicações
 import logging 
 import locale # Para formatação de moeda local
+from APP.db.cac_storage import CacStorage
+import re
+import aiofiles # type: ignore
 
 logging.basicConfig(level=logging.INFO)
 
@@ -275,3 +281,60 @@ async def status(chat_manager: ChatGestao = Depends(get_chat_gestion_for_request
     Retorna o status da API e a versão do modelo LLM em uso.
     """
     return {"status": "API online", "modelo": chat_manager.versao}
+
+
+@router.get("/relatorio/cac_mensal", response_model=Dict[str, Any])
+async def obter_cac_mensal(ano_mes: str, cac_storage: CacStorage = Depends(get_shared_resources)["cac_storage"]): # Injeta direto o cac_storage
+    """
+    Retorna o CAC para um mês específico (formato YYYY-MM).
+    """
+    if not re.match(r"^\d{4}-\d{2}$", ano_mes):
+        raise HTTPException(status_code=400, detail="Formato de ano_mes inválido. Use YYYY-MM.")
+
+    try:
+        total_despesas = await cac_storage.calcular_total_despesas_cac_mensal(ano_mes)
+        num_novos_clientes = await cac_storage.contar_novos_clientes_mensal(ano_mes)
+        cac = await cac_storage.calcular_cac_mensal(ano_mes)
+
+        return {
+            "ano_mes": ano_mes,
+            "total_despesas_cac": total_despesas,
+            "num_novos_clientes": num_novos_clientes,
+            "cac": cac,
+            "observacao": "CAC é 0.0 se não houver novos clientes no mês." if num_novos_clientes == 0 else None
+        }
+    except Exception as e:
+        logging.error(f"Erro ao calcular CAC para {ano_mes}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Erro interno ao calcular CAC.")
+
+
+
+@router.get("/relatorio/cac/exportar", response_class=FileResponse)
+async def exportar_cac_excel(
+    start_month: str = (datetime.now() - relativedelta(months=5)).strftime('%Y-%m'), # Default 6 meses atrás
+    end_month: str = datetime.now().strftime('%Y-%m'), # Default mês atual
+    cac_exporter: CacExporter = Depends(lambda s=Depends(get_shared_resources): s["cac_exporter"]) # Injeção customizada
+):
+    """
+    Exporta o relatório de CAC para um arquivo Excel.
+    """
+    if not re.match(r"^\d{4}-\d{2}$", start_month) or not re.match(r"^\d{4}-\d{2}$", end_month):
+        raise HTTPException(status_code=400, detail="Formato de mês inválido. Use YYYY-MM.")
+
+    temp_file_path = f"/tmp/relatorio_cac_{datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx" # Caminho temporário
+
+    success = await cac_exporter.export_cac_report_to_excel(
+        output_filepath=temp_file_path,
+        start_month=start_month,
+        end_month=end_month
+    )
+
+    if not success:
+        raise HTTPException(status_code=500, detail="Falha ao gerar o relatório Excel.")
+
+    # Retorna o arquivo para download
+    return FileResponse(
+        path=temp_file_path,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename="relatorio_cac.xlsx"
+    )

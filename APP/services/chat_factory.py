@@ -14,7 +14,7 @@ from APP.services.chat.gerador_resposta_llm import GeradorRespostaLLM
 from APP.services.chat.topico_classificador import TopicoClassificador
 from APP.helpers.explicabilidade.utils import MockLLMForExplanation 
 import lime.lime_text 
-
+from APP.db.cac_storage import CacStorage 
 from APP.helpers.gerador_grafico import GeradorEstruturaGrafico
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -32,7 +32,9 @@ async def get_shared_resources() -> Dict:
         
         context_db_instance = ContextStorage()
         await context_db_instance.connect()
-
+        
+        cac_storage_instance = CacStorage() # <<< NOVA INSTÂNCIA CAC
+        await cac_storage_instance.connect()
         model = carregar_modelo()
         tokenizer = carregar_tokenizer()
         generation_config = CONFIG.GENERATION_CONFIG 
@@ -74,6 +76,7 @@ async def get_shared_resources() -> Dict:
             "mock_llm_for_explanation": mock_llm_for_explanation, # Pode ser None
             "lime_explicator": lime_explicator, # Pode ser None
             "shap_explicator": shap_explicator, # Pode ser None
+            "cac_storage": cac_storage_instance,
             "context_db": context_db_instance,
             "gerador_grafico": GeradorEstruturaGrafico()
         }
@@ -105,3 +108,6 @@ async def close_db_connection():
     if "context_db" in _shared_resources and _shared_resources["context_db"]:
         await _shared_resources["context_db"].close()
         logging.info("Conexão do banco de dados fechada no shutdown.")
+    if "cac_storage" in _shared_resources and _shared_resources["cac_storage"]: # <<< FECHA TAMBÉM O CAC STORAGE
+        await _shared_resources["cac_storage"].close()
+        logging.info("Conexão do banco de dados (CacStorage) fechada no shutdown.")

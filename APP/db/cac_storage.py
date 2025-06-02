@@ -1,5 +1,5 @@
 # APP/db/cac_storage.py (Novo arquivo)
-import aiosqlite # type: ignore
+import aiosqlite  # type: ignore
 from datetime import datetime
 import logging
 from typing import List, Dict, Any, Optional, Tuple
