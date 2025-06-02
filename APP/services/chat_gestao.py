@@ -109,6 +109,4 @@ class ChatGestao:
             "dados_grafico": dados_grafico, # Retorna os dados estruturados para o cliente
             "modelo_versao": self.versao
         }
-
-# Remova os métodos iniciar_chat, _selecionar_ou_criar_chat, _responder_pergunta_valida, _responder_pergunta_invalida
 # Eles são específicos da CLI e não se aplicam a um contexto de API.
