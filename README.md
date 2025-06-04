@@ -1,4 +1,3 @@
-
 # ConexAI API – Documentação Técnica
 
 > Esta API expõe funcionalidades do modelo **ConexAI VX** via FastAPI, permitindo que aplicações externas (como o backend em Node.js) interajam com o modelo, salvem contexto e acessem históricos de conversa.
@@ -32,15 +31,15 @@ Você pode configurar:
 
 ## Endpoints Disponíveis
 
-### `<span>GET /status</span>`
+### `GET /status`
 
 Retorna o status da API e a versão do modelo carregado.
 
-### `<span>POST /chat/pergunta</span>`
+### `POST /chat/pergunta`
 
 Envia uma pergunta para o ConexAI. A resposta será gerada e registrada no histórico.
 
-### `<span>GET /chat/historico?usuario=nome</span>`
+### `GET /chat/historico?usuario=nome`
 
 Lista os chats anteriores de um usuário específico.
 
@@ -48,31 +47,31 @@ Lista os chats anteriores de um usuário específico.
 
 ## Arquitetura e Componentes
 
-### `<span>ChatGestao</span>`
+### `ChatGestao`
 
-Classe orquestradora que gerencia o ciclo de vida de uma interação. Recebe as perguntas, valida com `<span>ValidadorPergunta</span>`, gera resposta com `<span>GeradorRespostaLLM</span>` e registra no histórico com `<span>HistoricoInteracao</span>`.
+Classe orquestradora que gerencia o ciclo de vida de uma interação. Recebe as perguntas, valida com `ValidadorPergunta`, gera resposta com `GeradorRespostaLLM` e registra no histórico com `HistoricoInteracao`.
 
-### `<span>ValidadorPergunta</span>`
+### `ValidadorPergunta`
 
 Valida a pergunta com base em filtros lexicais e semânticos, bloqueando termos técnicos e fora do escopo da IA.
 
-### `<span>GeradorRespostaLLM</span>`
+### `GeradorRespostaLLM`
 
-Classe responsável por gerar respostas usando `<span>transformers.pipeline</span>`, com base no modelo carregado dinamicamente (V1, V2...).
+Classe responsável por gerar respostas usando `transformers.pipeline`, com base no modelo carregado dinamicamente (V1, V2...).
 
-### `<span>HistoricoInteracao</span>`
+### `HistoricoInteracao`
 
-Registra interações (pergunta, resposta, validade) em memória e no banco SQLite. Permite listar ou limpar registros associados a um `<span>chat_id</span>`.
+Registra interações (pergunta, resposta, validade) em memória e no banco SQLite. Permite listar ou limpar registros associados a um `chat_id`.
 
-### `<span>InterfaceTerminal</span>`
+### `InterfaceTerminal`
 
 Camada de interação com o terminal para testes locais. Substituível por interface web ou CLI.
 
-### `<span>carregador_modelo.py</span>`
+### `carregador_modelo.py`
 
 Script que carrega dinamicamente o modelo, tokenizer e config, de acordo com a versão desejada (V1, V2, ...).
 
-### `<span>formatador_prompt.py</span>`
+### `formatador_prompt.py`
 
 Contém funções utilitárias para montar o prompt de entrada com base em instruções padronizadas.
 
@@ -82,10 +81,11 @@ Contém funções utilitárias para montar o prompt de entrada com base em instr
 
 O ConexAI possui suporte a múltiplas versões:
 
-* `<span>ConexAI V1</span>`: Baseado em `<span>deepseek-llm-7b-chat</span>`
-* `<span>ConexAI V2</span>`: Baseado em `<span>mistralai/Mistral-7B-Instruct-v0.2</span>`
+* `ConexAI V1`: Baseado em `deepseek-llm-7b-chat`
+* `ConexAI V2`: Baseado em `mistralai/Mistral-7B-Instruct-v0.2`
+* `ConexAI V3`: Baseado em `meta-llama/Llama-3.1-8B-Instruct`
 
-A seleção é feita dinamicamente no `<span>criar_chat(versao: str)</span>`.
+A seleção é feita dinamicamente no `criar_chat(versao: str)`.
 
 ---
 
@@ -94,7 +94,7 @@ A seleção é feita dinamicamente no `<span>criar_chat(versao: str)</span>`.
 * **Frameworks:** FastAPI, Transformers, PEFT (LoRA), SQLite
 * **Quantização:** 4-bit (NF4 via BitsAndBytes)
 * **Modelo carregado dinamicamente**
-* **Tokenização:** baseada em `<span>AutoTokenizer</span>`
+* **Tokenização:** baseada em `AutoTokenizer`
 
 ---
 

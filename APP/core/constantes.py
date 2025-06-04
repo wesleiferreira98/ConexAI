@@ -2,12 +2,13 @@ import os
 
 # Versão padrão do modelo (se não estiver definida a variável de ambiente)
 VERSAO_MODELO = os.environ.get("CONEXAI_MODELO", "ConexAI Vteste")
+VERSAO_MODELO = "ConexAI Vteste"
 
 # Caminhos dos adaptadores para cada versão
 ADAPTER_PATHS = {
-    "ConexAI V1": "./APP/modelos_conexAI/ConexAI V1",
-    "ConexAI V2": "./APP/modelos_conexAI/ConexAI V2",
-    "ConexAI Vteste": "./APP/modelos_conexAI/ConexAI Vteste"
+    "ConexAI V1": "ConexAITeam/ConexAI V1",
+    "ConexAI V2": "ConexAITeam/ConexAI V2",
+    "ConexAI Vteste": "TheBloke/Mistral-7B-Instruct-v0.2-GGUF"
 }
 
 # Modelos base para cada versão

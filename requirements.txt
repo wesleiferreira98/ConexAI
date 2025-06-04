@@ -1,20 +1,42 @@
 # Requisitos para executar a API ConexAI
 
+# --- Core da Aplicação Web e Servidor ---
 fastapi==0.110.0
 uvicorn[standard]==0.29.0
+# pydantic # Geralmente incluído por fastapi, mas pode ser especificado se necessário
+
+# --- Core do LLM (Transformers e dependências) ---
 transformers==4.39.3
 peft==0.10.0
-sentence-transformers==2.2.2
-scikit-learn==1.4.1.post1
-numpy==1.26.4
-torch==2.2.2
+torch==2.2.2  # Verifique a versão CUDA compatível com seu ambiente em pytorch.org
 accelerate==0.28.0
 optimum==1.17.1
-bitsandbytes==0.43.1
+bitsandbytes==0.43.1  # Requer ambiente CUDA para funcionar
+huggingface_hub==0.23.0 # Para download de modelos e adaptadores do Hugging Face
 
-# Utilitários adicionais
-python-dotenv==1.0.1
+# --- Processamento de Linguagem Natural (Embeddings, Validação) ---
+sentence-transformers==2.2.2
+numpy==1.26.4
+scikit-learn==1.4.1.post1 # Utilizado implicitamente para algumas operações ou comum em projetos ML
 
-# Para exportação de gráficos estruturados (se aplicável)
-regex==2024.4.16
-ctransformers
+# --- Explicabilidade de IA (XAI) ---
+lime==0.2.0.1  # Para LIME (Local Interpretable Model-agnostic Explanations)
+shap==0.45.0   # Para SHAP (SHapley Additive exPlanations)
+
+# --- Banco de Dados ---
+aiosqlite==0.19.0 # Para operações assíncronas com SQLite
+asyncio
+
+# --- Utilitários e Parsing ---
+python-dotenv==1.0.1 # Para carregar variáveis de ambiente de arquivos .env
+regex==2024.4.16     # Para expressões regulares avançadas (usado em GeradorEstruturaGrafico)
+python-dateutil==2.9.0 # Para parsing flexível de datas (usado em GeradorEstruturaGrafico)
+
+# --- Modelos GGUF (Llama.cpp) - Escolha UMA das opções abaixo se for usar ---
+# Opção 1: llama-cpp-python (recomendado, mais otimizado para GPUs)
+# Atenção: Esta biblioteca pode exigir ferramentas de compilação (ex: build-essential no Linux)
+# ou a URL extra para wheels pré-compiladas.
+llama-cpp-python==0.2.60 # Exemplo de versão. Verifique a mais recente e estável.
+
+# Opção 2: ctransformers (alternativa para modelos GGUF, menos otimizada para GPU)
+# ctransformers==0.2.27 # Descomente e ajuste a versão se preferir ctransformers

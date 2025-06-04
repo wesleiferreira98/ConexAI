@@ -1,10 +1,12 @@
 from APP.services.chat.formatador_prompt import formatar_prompt
-
+import torch
+from transformers import GenerationConfig 
 class GeradorRespostaLLM:
-    def __init__(self, model, tokenizer=None, framework="llama_cpp"):
+    def __init__(self, model, tokenizer=None,generation_config=None,framework="llama_cpp"):
         self.model = model
         self.tokenizer = tokenizer
         self.framework = framework
+        self.generation_config=generation_config 
 
     def gerar_resposta(self, pergunta: str) -> str:
         dados_cliente = {
