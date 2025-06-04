@@ -25,6 +25,7 @@ shap==0.45.0   # Para SHAP (SHapley Additive exPlanations)
 
 # --- Banco de Dados ---
 aiosqlite==0.19.0 # Para operações assíncronas com SQLite
+asyncio
 
 # --- Utilitários e Parsing ---
 python-dotenv==1.0.1 # Para carregar variáveis de ambiente de arquivos .env
