@@ -1,5 +1,5 @@
 # APP/API/routes.py
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import FileResponse
 from matplotlib.dates import relativedelta
 from pydantic import BaseModel, Field # Importe Field para default values
@@ -58,6 +58,18 @@ class DadosGraficoOutput(BaseModel):
     dados: List[DadosGraficoItem]
     unidade: str # Renomeado de 'moeda' para 'unidade' para ser mais genérico
 
+class PaginatedChatSummary(BaseModel):
+    total_items: int
+    skip: int
+    limit: int
+    items: List[Tuple[int, str, str]] # Lista de tuplas (id, nome_chat, data_criacao)
+
+class PaginatedDetailedInteractions(BaseModel):
+    total_items: int
+    skip: int
+    limit: int
+    usuario: str
+    interacoes: List[Dict[str, Any]] # Lista de interações detalhadas (usamos Dict[str, Any] para flexibilidade)
 
 class ChatInteracaoOutput(BaseModel):
     chat_id: int # ID do chat agora é int
@@ -245,34 +257,56 @@ async def responder_pergunta_endpoint(
     )
 
 
-@router.get("/chat/historico", response_model=List[Tuple[int, str, str]]) # <<< CORREÇÃO: response_model para List[Tuple]
-async def obter_historico(usuario: str, chat_manager: ChatGestao = Depends(get_chat_gestion_for_request)):
+@router.get("/chat/historico", response_model=PaginatedChatSummary) # <<< NOVO response_model
+async def obter_historico(
+    usuario: str, 
+    skip: int = Query(0, ge=0, description="Número de itens a pular (offset)."), # <<< NOVO: Query Params
+    limit: int = Query(100, gt=0, le=500, description="Número máximo de itens por página (page size)."), # <<< NOVO: Query Params
+    chat_manager: ChatGestao = Depends(get_chat_gestion_for_request)
+):
     """
-    Lista todos os chats de um usuário.
+    Lista os chats anteriores de um usuário específico com suporte a paginação.
     """
-    return await chat_manager.context_db.listar_chats(usuario) # <<< Adicionado await
+    total_chats = await chat_manager.context_db.contar_total_chats_usuario(usuario) # <<< Obtém o total
+    chats = await chat_manager.context_db.listar_chats(usuario, skip, limit) # <<< Passa skip e limit
+    
+    return PaginatedChatSummary(
+        total_items=total_chats,
+        skip=skip,
+        limit=limit,
+        items=chats
+    )
 
 
-@router.get("/chat/historico/detalhado", response_model=Dict[str, Any]) 
-async def obter_historico_detalhado(usuario: str, chat_manager: ChatGestao = Depends(get_chat_gestion_for_request)):
+@router.get("/chat/historico/detalhado", response_model=PaginatedDetailedInteractions) # <<< NOVO response_model
+async def obter_historico_detalhado(
+    usuario: str, 
+    skip: int = Query(0, ge=0, description="Número de itens a pular (offset)."), # <<< NOVO: Query Params
+    limit: int = Query(100, gt=0, le=500, description="Número máximo de itens por página (page size)."), # <<< NOVO: Query Params
+    chat_manager: ChatGestao = Depends(get_chat_gestion_for_request)
+):
     """
-    Retorna o histórico detalhado de interações para um usuário.
+    Retorna o histórico detalhado de interações para um usuário com suporte a paginação.
     """
-    historico = await chat_manager.context_db.listar_interacoes(usuario) # <<< Adicionado await
+    total_interacoes = await chat_manager.context_db.contar_total_interacoes_usuario(usuario) # <<< Obtém o total
+    historico = await chat_manager.context_db.listar_interacoes(usuario, skip, limit) # <<< Passa skip e limit
     
     # Processa o histórico para formatar dados_grafico e a data para cada interação
     formatted_interacoes = []
     for interacao in historico:
         formatted_interacao = interacao.copy()
-        # Formata dados_grafico se existirem
         formatted_interacao["dados_grafico"] = _formatar_dados_grafico_para_cliente(interacao.get("dados_grafico"))
-        # Formata resposta_formatada para consistência
         formatted_interacao["resposta_formatada"] = _formatar_resposta_llm_para_cliente(interacao.get("resposta_llm_bruta", ""))
-        # Certifica-se de que a data está no formato de string desejado para a saída
-        # interacao.get("data") já deve vir como string do DB se o DB salvou como string
+        # A data já vem como string do DB, então a mantemos assim.
         formatted_interacoes.append(formatted_interacao)
 
-    return {"usuario": usuario, "interacoes": formatted_interacoes}
+    return PaginatedDetailedInteractions(
+        total_items=total_interacoes,
+        skip=skip,
+        limit=limit,
+        usuario=usuario,
+        interacoes=formatted_interacoes
+    )
 
 
 @router.get("/status", response_model=Dict[str, str])

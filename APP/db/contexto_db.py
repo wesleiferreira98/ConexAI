@@ -72,16 +72,23 @@ class ContextStorage:
             logging.info(f"Chat '{nome_chat}' criado para '{usuario}' com ID: {chat_id}")
             return chat_id
 
-    async def listar_chats(self, usuario: str) -> List[Tuple[int, str, str]]:
-        """Lista os chats de um usuário."""
+    async def listar_chats(self, usuario: str, skip: int = 0, limit: int = 100) -> List[Tuple[int, str, str]]:
+        """
+        Lista os chats de um usuário com suporte a paginação.
+        Args:
+            usuario (str): Nome do usuário.
+            skip (int): Número de itens a pular (offset).
+            limit (int): Número máximo de itens a retornar (page size).
+        """
         async with self._conn.cursor() as cursor:
             await cursor.execute(
-                "SELECT id, nome_chat, data_criacao FROM chats WHERE usuario = ? ORDER BY data_criacao DESC",
-                (usuario,)
+                "SELECT id, nome_chat, data_criacao FROM chats WHERE usuario = ? ORDER BY data_criacao DESC LIMIT ? OFFSET ?",
+                (usuario, limit, skip)
             )
             chats = await cursor.fetchall()
-            logging.info(f"Chats listados para '{usuario}': {len(chats)} encontrados.")
+            logging.info(f"Chats listados para '{usuario}' (skip={skip}, limit={limit}): {len(chats)} encontrados.")
             return chats
+
 
     async def registrar_interacao(self, chat_id: int, interacao: Dict[str, Any]):
         """
@@ -120,10 +127,13 @@ class ContextStorage:
             logging.error(f"Erro ao registrar interação no chat {chat_id}: {e}", exc_info=True)
             raise # Re-lança para que o erro seja tratado na camada superior
 
-    async def listar_interacoes(self, usuario: str) -> List[Dict[str, Any]]:
+    async def listar_interacoes(self, usuario: str, skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
         """
-        Lista todas as interações detalhadas de um usuário,
-        incluindo informações do chat e desserializando campos JSON.
+        Lista todas as interações detalhadas de um usuário com suporte a paginação.
+        Args:
+            usuario (str): Nome do usuário.
+            skip (int): Número de itens a pular (offset).
+            limit (int): Número máximo de itens a retornar (page size).
         """
         async with self._conn.cursor() as cursor:
             await cursor.execute(
@@ -136,8 +146,9 @@ class ContextStorage:
                 JOIN chats c ON h.chat_id = c.id 
                 WHERE c.usuario = ? 
                 ORDER BY h.data DESC
+                LIMIT ? OFFSET ?
                 """,
-                (usuario,)
+                (usuario, limit, skip)
             )
             rows = await cursor.fetchall()
         
@@ -160,7 +171,7 @@ class ContextStorage:
                 "modelo": row[9],
                 "data": row[10]
             })
-        logging.info(f"Interações listadas para '{usuario}': {len(interacoes)} encontradas.")
+        logging.info(f"Interações listadas para '{usuario}' (skip={skip}, limit={limit}): {len(interacoes)} encontradas.")
         return interacoes
 
     async def recuperar_contexto(self, chat_id: int, limite: int = 3) -> List[Dict[str, str]]:
@@ -187,3 +198,26 @@ class ContextStorage:
             )
             await self._conn.commit()
         logging.info(f"Histórico limpo para chat {chat_id}.")
+
+
+    async def contar_total_chats_usuario(self, usuario: str) -> int:
+            """Conta o total de chats para um usuário."""
+            async with self._conn.cursor() as cursor:
+                await cursor.execute(
+                    "SELECT COUNT(id) FROM chats WHERE usuario = ?",
+                    (usuario,)
+                )
+                total = (await cursor.fetchone())[0]
+                return total if total is not None else 0
+            
+    async def contar_total_interacoes_usuario(self, usuario: str) -> int:
+        """Conta o total de interações para um usuário."""
+        async with self._conn.cursor() as cursor:
+            await cursor.execute(
+                """
+                SELECT COUNT(h.id) FROM historico h JOIN chats c ON h.chat_id = c.id WHERE c.usuario = ?
+                """,
+                (usuario,)
+            )
+            total = (await cursor.fetchone())[0]
+            return total if total is not None else 0

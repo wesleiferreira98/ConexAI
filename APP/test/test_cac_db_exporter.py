@@ -21,7 +21,7 @@ async def main():
     # Define o período para o relatório mensal
     # Ex: do início de 2024 até o mês atual
     end_month = datetime.now().strftime('%Y-%m')
-    start_dt = datetime.now() - relativedelta(months=5) # 6 meses antes
+    start_dt = datetime.now() - relativedelta(months=11) # 6 meses antes
     start_month = start_dt.strftime('%Y-%m')
 
 

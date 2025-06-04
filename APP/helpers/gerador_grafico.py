@@ -95,7 +95,7 @@ class GeradorEstruturaGrafico:
         matches = self.regex_temporal_data.findall(resposta)
         
         # Prioriza datas completas e depois nomes de meses
-        for label_raw, _, valor_str in matches: # O segundo grupo de captura (ano) é ignorado aqui
+        for label_raw, _, valor_str in matches: # O segundo grupo de captura (ano) é ignorado aqui 
             data_formatada = None
             
             # Tenta parser a label como uma data
@@ -110,7 +110,7 @@ class GeradorEstruturaGrafico:
                     parsed_date = parser.parse(f"{label_raw} {parser.parse('now').year}", fuzzy=True, dayfirst=True)
                     data_formatada = parsed_date.strftime("%Y-%m-%d")
                 except ParserError:
-                    logging.debug(f"Não foi possível parsear a data/mês: '{label_raw}'")
+                    logging.debug(f"🗿 Não foi possível parsear a data/mês: '{label_raw}'")
                     continue # Pula para o próximo match
 
             valor = self._parse_numeric_value(valor_str)
