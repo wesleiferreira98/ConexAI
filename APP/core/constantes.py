@@ -28,7 +28,7 @@ BASE_MODEL = MODELOS_BASE[VERSAO_MODELO]
 
 # Configurações de embeddings para validação semântica
 CONFIG = {
-    'modelo_t5': 'sentence-t5-xxl',
+    'modelo_t5': 'sentence-t5-large',
     'modelo_mpnet': 'all-mpnet-base-v2',
     'modelo_distil': 'all-MiniLM-L6-v2',
 
