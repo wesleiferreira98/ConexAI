@@ -40,6 +40,15 @@ class ContextStorage:
                     data_criacao TEXT DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+            await cursor.execute("""
+                CREATE TABLE IF NOT EXISTS perfis_usuarios (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    usuario TEXT NOT NULL UNIQUE, -- O mesmo 'usuario' da tabela 'chats'
+                    preferencias TEXT,             -- Armazenaremos uma lista como JSON
+                    configuracoes TEXT,            -- Armazenaremos um objeto como JSON
+                    data_atualizacao TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
             # Tabela historico atualizada para armazenar todos os novos campos
             await cursor.execute("""
                 CREATE TABLE IF NOT EXISTS historico (
