@@ -3,6 +3,7 @@ from datetime import datetime
 import json
 import logging
 from typing import List, Dict, Any, Optional, Tuple
+from APP.schemas.perfil_schema import PerfilUsuarioSchema
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -230,3 +231,105 @@ class ContextStorage:
             )
             total = (await cursor.fetchone())[0]
             return total if total is not None else 0
+    
+    
+
+    async def atualizar_perfil(self, perfil_data: PerfilUsuarioSchema):
+        """
+        Cria ou atualiza o perfil de um usuário na tabela perfis_usuarios.
+        Utiliza a sintaxe 'INSERT ... ON CONFLICT' (UPSERT) para simplificar a lógica.
+
+        Args:
+            perfil_data: Um objeto PerfilUsuarioSchema com os dados a serem salvos.
+        """
+        # Serializa os campos complexos para strings JSON
+        preferencias_json = json.dumps(perfil_data.preferencias)
+        # Usa o método .dict() do Pydantic para converter o sub-modelo em um dicionário
+        configuracoes_json = json.dumps(perfil_data.configuracoes.dict())
+        
+        sql = """
+            INSERT INTO perfis_usuarios (usuario, preferencias, configuracoes, data_atualizacao)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(usuario) DO UPDATE SET
+                preferencias = excluded.preferencias,
+                configuracoes = excluded.configuracoes,
+                data_atualizacao = excluded.data_atualizacao;
+        """
+        
+        try:
+            await self.connect() # Garante que a conexão está ativa
+            async with self._conn.cursor() as cursor:
+                await cursor.execute(
+                    sql,
+                    (
+                        perfil_data.id_usuario,
+                        preferencias_json,
+                        configuracoes_json,
+                        datetime.now().isoformat()
+                    )
+                )
+                await self._conn.commit()
+            logging.info(f"Perfil do usuário '{perfil_data.id_usuario}' atualizado com sucesso.")
+        except Exception as e:
+            logging.error(f"Falha ao atualizar o perfil do usuário '{perfil_data.id_usuario}': {e}", exc_info=True)
+            # Você pode querer propagar o erro dependendo da sua estratégia de tratamento
+            raise
+
+    async def obter_perfil_completo(self, usuario: str, chat_id: Optional[int] = None, limite_historico: int = 3) -> PerfilUsuarioSchema:
+        """
+        Monta o perfil completo de um usuário, combinando dados da tabela
+        'perfis_usuarios' (preferências/configurações) e 'historico' (interações recentes).
+
+        Args:
+            usuario: O ID do usuário para buscar o perfil.
+            chat_id: O ID do chat atual para buscar o histórico relevante.
+            limite_historico: O número de interações recentes a serem incluídas.
+
+        Returns:
+            Um objeto PerfilUsuarioSchema preenchido com todos os dados do usuário.
+        """
+        await self.connect() # Garante que a conexão está ativa
+        
+        # Valores padrão caso o perfil não exista
+        preferencias = []
+        configuracoes = ConfiguracoesSchema() # Pydantic nos dá um objeto com os padrões
+
+        # 1. Busca as preferências e configurações na tabela de perfis
+        try:
+            async with self._conn.cursor() as cursor:
+                await cursor.execute(
+                    "SELECT preferencias, configuracoes FROM perfis_usuarios WHERE usuario = ?",
+                    (usuario,)
+                )
+                row = await cursor.fetchone()
+
+            if row:
+                # Desserializa os dados do banco de dados
+                preferencias = json.loads(row[0]) if row[0] else []
+                config_dict = json.loads(row[1]) if row[1] else {}
+                configuracoes = ConfiguracoesSchema(**config_dict)
+                logging.info(f"Preferências e configurações carregadas para o usuário '{usuario}'.")
+            else:
+                logging.info(f"Nenhum perfil encontrado para '{usuario}'. Usando valores padrão.")
+
+        except Exception as e:
+            logging.error(f"Erro ao buscar perfil de '{usuario}': {e}. Usando valores padrão.", exc_info=True)
+
+        # 2. Busca o histórico de interações (reutilizando seu método existente)
+        historico = []
+        if chat_id:
+            try:
+                # Seu método já retorna o histórico no formato [{"pergunta": "", "resposta": ""}]
+                historico = await self.recuperar_contexto(chat_id, limite=limite_historico)
+                logging.info(f"Histórico de interações carregado para o chat '{chat_id}'.")
+            except Exception as e:
+                logging.error(f"Erro ao recuperar contexto para o chat '{chat_id}': {e}", exc_info=True)
+
+        # 3. Monta e retorna o objeto de perfil completo
+        perfil_final = PerfilUsuarioSchema(
+            id_usuario=usuario,
+            preferencias=preferencias,
+            configuracoes=configuracoes,
+            historico_interacoes=historico  # O schema espera uma lista, mas seu método retorna o formato correto
+        )
+        return perfil_final

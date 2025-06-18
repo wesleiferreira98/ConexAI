@@ -16,6 +16,7 @@ import locale # Para formatação de moeda local
 from APP.db.cac_storage import CacStorage
 import re
 import aiofiles # type: ignore
+from schemas.perfil_schema import PerfilUsuarioSchema, ConfiguracoesSchema
 
 logging.basicConfig(level=logging.INFO)
 
@@ -50,6 +51,10 @@ class DadosGraficoItem(BaseModel):
     categoria: Optional[str] = None # Para gráficos de barra/pizza
     valor: float                    # Valor numérico bruto
     valor_formatado: Optional[str] = None # Campo para o valor já formatado
+
+class PerfilUpdateInput(BaseModel):
+    preferencias: Optional[List[str]] = Field(None, description="Lista de tópicos de preferência do usuário.")
+    configuracoes: Optional[ConfiguracoesSchema] = Field(None, description="Configurações personalizadas do usuário.")
 
 # Define o modelo Pydantic completo para dados_grafico
 class DadosGraficoOutput(BaseModel):
@@ -372,3 +377,41 @@ async def exportar_cac_excel(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         filename="relatorio_cac.xlsx"
     )
+
+
+@router.put("/perfil/{usuario}", response_model=PerfilUsuarioSchema, status_code=status.HTTP_200_OK)
+async def atualizar_perfil_usuario(
+    usuario: str,
+    payload: PerfilUpdateInput,
+    chat_manager: ChatGestao = Depends(get_chat_gestion_for_request)
+):
+    """
+    Cria ou atualiza as preferências e configurações de um perfil de usuário.
+    """
+    logging.info(f"Recebida requisição para atualizar perfil do usuário '{usuario}'.")
+    
+    try:
+        # Primeiro, obtemos o perfil atual para não perder dados existentes
+        perfil_atual = await chat_manager.context_db.obter_perfil_completo(usuario)
+
+        # Atualizamos os campos apenas se eles foram fornecidos no payload
+        if payload.preferencias is not None:
+            perfil_atual.preferencias = payload.preferencias
+        
+        if payload.configuracoes is not None:
+            perfil_atual.configuracoes = payload.configuracoes
+        
+        # Salvamos o perfil modificado de volta no banco de dados
+        await chat_manager.context_db.atualizar_perfil(perfil_atual)
+        
+        logging.info(f"Perfil do usuário '{usuario}' atualizado com sucesso.")
+        
+        # Retornamos o perfil completo e atualizado
+        return perfil_atual
+
+    except Exception as e:
+        logging.error(f"Erro ao atualizar o perfil para '{usuario}': {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Ocorreu um erro interno ao atualizar o perfil."
+        )
