@@ -37,42 +37,45 @@ def formatar_prompt_com_perfil(pergunta: str, perfil: 'PerfilUsuarioSchema') -> 
     Returns:
         O prompt final, pronto para ser enviado ao modelo de linguagem.
     """
+   # <<< INSTRUÇÃO DE SISTEMA APRIMORADA >>>
+    instrucao_sistema = """Você é o ConexAI, um assistente especialista em análise financeira e gestão de negócios. Suas respostas devem ser claras, bem estruturadas e educativas, sempre mantendo um tom profissional.
+
+Sempre que possível, estruture suas respostas da seguinte forma:
+1.  **Definição Concisa:** Comece com uma definição clara e direta do conceito principal.
+2.  **Detalhes e Estrutura:** Use listas (com marcadores `*` ou numeradas) para detalhar características, componentes ou critérios importantes. Se houver um acrônimo conhecido (como SMART), explique-o.
+3.  **Exemplos Práticos:** Forneça de 2 a 3 exemplos concretos que ajudem a ilustrar o conceito em um cenário de negócios real.
+4.  **Diferenciação ou Relevância:** Conclua explicando por que o conceito é importante ou o que o diferencia de outros similares.
+"""
+
     partes_contexto = []
 
-    # 1. Adiciona as preferências
     if perfil.preferencias:
-        texto_preferencias = f"O usuário tem interesse em: {', '.join(perfil.preferencias)}."
+        texto_preferencias = f"Adapte os exemplos e a linguagem aos interesses do usuário: {', '.join(perfil.preferencias)}."
         partes_contexto.append(texto_preferencias)
 
-    # 2. Adiciona as configurações
-    if perfil.configuracoes:
-        nivel = perfil.configuracoes.nivel_experiencia
-        formato = perfil.configuracoes.formato_resposta
-        if nivel != "não informado" or formato != "padrão":
-            texto_config = f"O usuário se identifica com o nível '{nivel}' e prefere respostas no formato '{formato}'."
-            partes_contexto.append(texto_config)
-
-    # 3. Adiciona o histórico de interações
-    if perfil.historico_interacoes:
-        # Formata o histórico para o formato Pergunta/Resposta que os modelos entendem bem
-        historico_formatado = "\n".join([f"Pergunta anterior: {interacao['pergunta']}\nResposta anterior: {interacao['resposta']}" for interacao in perfil.historico_interacoes])
-        partes_contexto.append(f"Este é um resumo de suas interações recentes:\n{historico_formatado}")
+    if perfil.configuracoes and perfil.configuracoes.formato_resposta != "padrão":
+        texto_config = f"O usuário prefere um formato de resposta '{perfil.configuracoes.formato_resposta}'."
+        partes_contexto.append(texto_config)
 
     # Monta o prompt final
-    if partes_contexto:
-        contexto_texto = "\n".join(partes_contexto)
-        prompt_final = f"""Use o seguinte contexto sobre o usuário para personalizar sua resposta:
+    contexto_usuario_texto = "\n".join(partes_contexto)
+    
+    if contexto_usuario_texto:
+        prompt_final = f"""{instrucao_sistema}
 ---
-[CONTEXTO DO USUÁRIO]
-{contexto_texto}
+[INFORMAÇÕES ADICIONAIS SOBRE O USUÁRIO]
+{contexto_usuario_texto}
 ---
 
-Com base nesse contexto, responda à pergunta do usuário:
+Com base na sua especialidade e adaptando-se ao usuário, responda à pergunta:
 <human>: {pergunta}
 <assistant>:"""
     else:
-        # Fallback se não houver perfil (TSK053.04)
-        prompt_final = f"""<human>: {pergunta}
+        # Fallback também usa a instrução detalhada
+        prompt_final = f"""{instrucao_sistema}
+
+Responda à seguinte pergunta:
+<human>: {pergunta}
 <assistant>:"""
 
     return prompt_final

@@ -38,7 +38,7 @@ async def get_shared_resources() -> Dict:
         model = carregar_modelo()
         tokenizer = carregar_tokenizer()
         generation_config = CONFIG.GENERATION_CONFIG 
-        framework = 'transformers' if not CONFIG.get_model_info()["is_llama_cpp"] else 'llama_cpp'
+        framework = 'transformers' if not CONFIG.get_model_info()["llama_cpp"] else 'llama_cpp'
         
         gerador_llm = GeradorRespostaLLM(model, tokenizer, generation_config, framework)
         
