@@ -15,7 +15,7 @@ def usar_bitsandbytes():
     return torch.cuda.is_available()
 
 
-def carregar_modelo(versao="ConexAI V1"):
+def carregar_modelo(versao="ConexAI Vteste"):
     if versao == "ConexAI V2":
         base_model = "mistralai/Mistral-7B-Instruct-v0.2"
         adapter_repo = "ConexAITeam/ConexAI_V2"
@@ -67,7 +67,7 @@ def carregar_modelo(versao="ConexAI V1"):
     return model.merge_and_unload()
 
 
-def carregar_tokenizer(versao="ConexAI V1"):
+def carregar_tokenizer(versao="ConexAI Vteste"):
     if versao == "ConexAI V2":
         base_model = "mistralai/Mistral-7B-Instruct-v0.2"
     elif versao == "ConexAI V1":

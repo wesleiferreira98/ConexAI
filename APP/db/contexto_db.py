@@ -3,7 +3,8 @@ from datetime import datetime
 import json
 import logging
 from typing import List, Dict, Any, Optional, Tuple
-from APP.schemas.perfil_schema import PerfilUsuarioSchema
+from APP.schemas.perfil_schema import PerfilUsuarioSchema, ConfiguracoesSchema
+import aiosqlite  # type: ignore
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
