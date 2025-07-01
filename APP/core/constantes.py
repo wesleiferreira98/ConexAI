@@ -47,3 +47,8 @@ CONFIG = {
         r'\b(fun[cç][aã]o|classe|loop|compilar|debug|query|sql)\b'
     ]
 }
+
+LIBRARY = {
+    'chunk_info':'Biblioteca/chunk_info.json',
+    'faiss_index': 'Biblioteca/faiss_index.bin'
+}

@@ -1,4 +1,5 @@
 import logging
+from typing import List
 from APP.services.chat.formatador_prompt import formatar_prompt, formatar_prompt_com_perfil
 import torch
 from transformers import GenerationConfig 
@@ -10,7 +11,7 @@ class GeradorRespostaLLM:
         self.framework = framework
         self.generation_config=generation_config 
 
-    def gerar_resposta(self, pergunta: str, perfil: PerfilUsuarioSchema) -> str:
+    def gerar_resposta(self, pergunta: str, perfil: PerfilUsuarioSchema, documentos: List[str]) -> str:
         """
         Gera uma resposta da LLM usando um prompt personalizado com base no perfil do usuário.
         
@@ -24,7 +25,7 @@ class GeradorRespostaLLM:
         # 3. Removemos os dados fixos e usamos o novo formatador
         try:
             # Esta é a mudança principal: usamos a nova função para criar um prompt rico
-            prompt = formatar_prompt_com_perfil(pergunta, perfil)
+            prompt = formatar_prompt_com_perfil(pergunta, perfil, documentos)
             
             logging.info(f"Prompt final enviado para o modelo para o usuário '{perfil.id_usuario}':\n{prompt}")
 
@@ -51,7 +52,7 @@ class GeradorRespostaLLM:
             return f"Erro na geração: {str(e)}"
 
     # AQUI ESTÁ A ASSINATURA CORRETA, que aceita o perfil
-    def gerar_resposta(self, pergunta: str, perfil: PerfilUsuarioSchema) -> str:
+    def gerar_resposta(self, pergunta: str, perfil: PerfilUsuarioSchema, documentos: List[str]) -> str:
         """
         Gera uma resposta da LLM usando um prompt personalizado com base no perfil do usuário.
         
@@ -65,7 +66,7 @@ class GeradorRespostaLLM:
         # Removemos os dados fixos e usamos o novo formatador
         try:
             # Esta é a mudança principal: usamos a nova função para criar um prompt rico
-            prompt = formatar_prompt_com_perfil(pergunta, perfil)
+            prompt = formatar_prompt_com_perfil(pergunta, perfil, documentos)
             
             logging.info(f"Prompt final enviado para o modelo para o usuário '{perfil.id_usuario}':\n{prompt}")
 

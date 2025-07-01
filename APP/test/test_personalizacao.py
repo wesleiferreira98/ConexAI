@@ -60,7 +60,8 @@ async def executar_teste_de_personalizacao():
             mock_llm_for_explanation=shared_resources["mock_llm_for_explanation"],
             lime_explicator=shared_resources["lime_explicator"],
             shap_explicator=shared_resources["shap_explicator"],
-            gerador_grafico=shared_resources["gerador_grafico"]
+            gerador_grafico=shared_resources["gerador_grafico"],
+            document_retriever=shared_resources["document_retriever"]
         )
         print("[SETUP] Recursos carregados.")
 

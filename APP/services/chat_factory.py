@@ -13,10 +13,11 @@ from APP.services.validador import ValidadorPergunta
 from APP.services.chat.gerador_resposta_llm import GeradorRespostaLLM
 from APP.services.chat.topico_classificador import TopicoClassificador
 from APP.helpers.explicabilidade.utils import MockLLMForExplanation 
+from APP.db.document_retriever import DocumentRetriever
 import lime.lime_text 
 from APP.db.cac_storage import CacStorage 
 from APP.helpers.gerador_grafico import GeradorEstruturaGrafico
-
+from APP.core.constantes import LIBRARY
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 _shared_resources = {}
@@ -68,6 +69,17 @@ async def get_shared_resources() -> Dict:
         else:
             logging.info("🚫 Explicabilidade (XAI) está DESATIVADA por configuração.")
         # --- Fim da Lógica Condicional para XAI ---
+        # <<< INÍCIO DA NOVA SEÇÃO >>>
+        document_retriever_instance = None
+        try:
+            document_retriever_instance = DocumentRetriever(
+                index_path=LIBRARY['faiss_index'],
+                chunk_info_path=LIBRARY['chunk_info'],
+                model_name='all-mpnet-base-v2'
+            )
+        except Exception as e:
+            logging.error(f"Não foi possível carregar o DocumentRetriever. A busca em documentos estará desativada. Erro: {e}")
+        # <<< FIM DA NOVA SEÇÃO >>>
 
         _shared_resources = {
             "gerador_llm": gerador_llm,
@@ -78,7 +90,8 @@ async def get_shared_resources() -> Dict:
             "shap_explicator": shap_explicator, # Pode ser None
             "cac_storage": cac_storage_instance,
             "context_db": context_db_instance,
-            "gerador_grafico": GeradorEstruturaGrafico()
+            "gerador_grafico": GeradorEstruturaGrafico(),
+            "document_retriever": document_retriever_instance
         }
         logging.info("✅ Recursos compartilhados carregados com sucesso.")
     return _shared_resources
@@ -96,7 +109,8 @@ async def get_chat_gestion_for_request(shared_res: Dict = Depends(get_shared_res
         mock_llm_for_explanation=shared_res["mock_llm_for_explanation"],
         lime_explicator=shared_res["lime_explicator"],
         shap_explicator=shared_res["shap_explicator"],
-        gerador_grafico=shared_res["gerador_grafico"]
+        gerador_grafico=shared_res["gerador_grafico"],
+        document_retriever=shared_res["document_retriever"] 
     )
 
 async def close_db_connection():

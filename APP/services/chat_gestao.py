@@ -6,7 +6,7 @@ from APP.services.chat.gerador_resposta_llm import GeradorRespostaLLM
 from APP.services.validador import ValidadorPergunta
 from APP.helpers.gerador_grafico import GeradorEstruturaGrafico
 from APP.schemas.perfil_schema import PerfilUsuarioSchema
-
+from APP.db.document_retriever import DocumentRetriever
 # Importações para explicabilidade (necessário para type hinting e uso)
 from APP.helpers.explicabilidade.utils import MockLLMForExplanation, formatar_explicacao
 from APP.helpers.explicabilidade.shap_explicator import ShapExplicator
@@ -19,7 +19,7 @@ class ChatGestao:
                  mock_llm_for_explanation: MockLLMForExplanation, 
                  lime_explicator: lime.lime_text.LimeTextExplainer, 
                  shap_explicator: ShapExplicator,
-                 gerador_grafico: GeradorEstruturaGrafico): # Gerador de gráfico também é stateless
+                 gerador_grafico: GeradorEstruturaGrafico,document_retriever: Optional[DocumentRetriever]): # Gerador de gráfico também é stateless
         
         self.validador = validador
         self.gerador = gerador
@@ -29,6 +29,7 @@ class ChatGestao:
         self.lime_explicator = lime_explicator
         self.shap_explicator = shap_explicator
         self.gerador_grafico = gerador_grafico
+        self.document_retriever = document_retriever
         logging.basicConfig(level=logging.INFO) # Configura logging
 
     async def processar_pergunta_api(self, usuario: str, pergunta: str, chat_id: Optional[str] = None) -> Dict[str, Any]:
@@ -71,20 +72,30 @@ class ChatGestao:
         explicacao_lime = None
         explicacao_shap = None
         dados_grafico = None
+         # ========= INÍCIO DA NOVA LÓGICA DE BUSCA DE DOCUMENTOS =========
+        documentos_relevantes = []
+        if self.document_retriever:
+            try:
+                # O search retorna uma lista de dicionários, pegamos só o texto
+                chunks_encontrados = self.document_retriever.search(pergunta)
+                documentos_relevantes = [chunk['texto'] for chunk in chunks_encontrados]
+            except Exception as e:
+                logging.error(f"Erro ao buscar documentos relevantes: {e}")
+        # ========= FIM DA NOVA LÓGICA DE BUSCA DE DOCUMENTOS =========
 
         if valido:
             logging.info(f"API: Pergunta válida. Gerando resposta personalizada para '{usuario}'...")
             # ================== CORREÇÃO PRINCIPAL AQUI ==================
             # Passa o 'perfil_usuario' para que a resposta seja personalizada
-            resposta_llm = self.gerador.gerar_resposta(pergunta, perfil_usuario)
+            resposta_llm = self.gerador.gerar_resposta(pergunta, perfil_usuario,documentos=documentos_relevantes)
             # =============================================================
             
             # --- O restante do código de explicabilidade e gráficos ---
             if self.lime_explicator and self.mock_llm_for_explanation:
-                #... seu código LIME
+               
                 pass
             if self.shap_explicator:
-                #... seu código SHAP
+                
                 pass
             dados_grafico = self.gerador_grafico.extrair_dados_de_resposta(resposta_llm)
             if dados_grafico:
