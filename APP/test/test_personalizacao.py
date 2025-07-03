@@ -38,6 +38,18 @@ cenarios_de_teste = [
         "perfil": perfil_gamer,
         "pergunta": "Qual a melhor build de personagem para o novo jogo de fantasia?",
         "comportamento_esperado": "A pergunta deve ser bloqueada. O campo 'valido' deve ser False e a resposta deve ser a mensagem de recusa."
+    },
+    {
+        "id_teste": "Teste 3: Pergunta DENTRO do escopo para perfil financeiro",
+        "perfil": perfil_gestor_financeiro,
+        "pergunta": "DRE: Entenda de uma vez por todas porque é importante analisar esse relatório!",
+        "comportamento_esperado": "A resposta deve ser focada em negócios, com linguagem profissional, e o campo 'valido' deve ser True."
+    },
+    {
+        "id_teste": "Teste 4: Pergunta DENTRO do escopo para perfil financeiro",
+        "perfil": perfil_gestor_financeiro,
+        "pergunta": "Relatório de CAC no Conexa",
+        "comportamento_esperado": "A resposta deve ser focada em negócios, com linguagem profissional, e o campo 'valido' deve ser True."
     }
 ]
 

@@ -39,9 +39,7 @@ def formatar_prompt_com_perfil(pergunta: str, perfil: 'PerfilUsuarioSchema', doc
     Returns:
         O prompt final, pronto para ser enviado ao modelo de linguagem.
     """
-   # <<< INSTRUÇÃO DE SISTEMA APRIMORADA >>>
-   # 1. Instrução de Sistema (Persona e Estrutura da Resposta)
-    instrucao_sistema = """Você é o ConexAI, um assistente especialista em análise financeira e gestão de negócios. Suas respostas devem ser claras, bem estruturadas e educativas, sempre mantendo um tom profissional.
+    instrucao_sistema = """Você é o ConexAI, um assistente especialista em análise financeira e gestão de negócios. Suas respostas devem ser claras, bem estruturadas e educativas, sempre mantendo um tom profissional. Responda sempre em Português do Brasil.
 
 Sempre que possível, estruture suas respostas da seguinte forma:
 1.  **Definição Concisa:** Comece com uma definição clara e direta do conceito principal.
@@ -49,6 +47,8 @@ Sempre que possível, estruture suas respostas da seguinte forma:
 3.  **Exemplos Práticos:** Forneça de 2 a 3 exemplos concretos que ajudem a ilustrar o conceito em um cenário de negócios real.
 4.  **Diferenciação ou Relevância:** Conclua explicando por que o conceito é importante ou o que o diferencia de outros similares.
 """
+
+    # ... (o resto da função permanece exatamente o mesmo) ...
 
     # 2. Seção de Documentos Recuperados (Contexto Factual - RAG)
     secao_documentos = ""
@@ -79,8 +79,7 @@ A seguir, trechos de artigos da nossa base de conhecimento que são relevantes p
 ---"""
 
     # 4. Montagem Final do Prompt
-    # A instrução final agora é mais explícita sobre usar os documentos
-    instrucao_final = "\nCom base NAS INFORMAÇÕES DA BASE DE CONHECIMENTO e adaptando-se ao usuário, responda à pergunta:"
+    instrucao_final = "\n Com base NAS INFORMAÇÕES DA BASE DE CONHECIMENTO e adaptando-se ao usuário, responda à pergunta:"
 
     prompt_final = f"""{instrucao_sistema}{secao_documentos}{secao_usuario}{instrucao_final}
 <human>: {pergunta}
